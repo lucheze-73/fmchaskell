@@ -137,8 +137,10 @@ lo :: Nat -> Nat -> Nat
 lo _ O = undefined
 lo O _ = undefined
 lo (S O) _ = undefined
-lo _ (S O) = O
 lo x y =
-  case isZero (y -* x) of
-    S O -> O
-    O -> S (lo x (y / x))
+  case y -* x of
+    O ->
+      case x -* y of
+        O -> one
+        S z -> O
+    z -> S (lo x (y / x))
