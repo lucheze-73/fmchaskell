@@ -26,7 +26,8 @@ data Bool = False | True
 
 instance Show Bool where
 
-    show = undefined
+    show True = "True"
+    show False = "False"
 
 instance Enum Bool where
 
@@ -36,13 +37,16 @@ instance Enum Bool where
 
 -- conjunction (AND)
 (&&) :: Bool -> Bool -> Bool
-(&&) = undefined
+True && True = True
+_ && _ = False
+
 
 infixr 3 &&
 
 -- disjunction (OR)
 (||) :: Bool -> Bool -> Bool
-(||) = undefined
+True || False = True
+_ || _ = False
 
 infixr 2 ||
 

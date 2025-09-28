@@ -168,8 +168,7 @@ infixl 7 </>
 
 -- euclidean division
 eucdiv :: (Nat, Nat) -> (Nat, Nat)
-eucdiv _O = undefined
-
+eucdiv (x, y) = (x </> y, x <%> y)
 
 -- divides
 (<|>) :: Nat -> Nat -> Bool
