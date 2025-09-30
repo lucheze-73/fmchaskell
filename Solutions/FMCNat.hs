@@ -225,10 +225,11 @@ lo x y =
 -- Do NOT use the following functions in the definitions above!
 
 toNat :: Integral a => a -> Nat
+toNat 0 = O
 toNat x =
   if x <= 0 
     then undefined 
-  else S (toNat (x - 1))
+    else S (toNat (x - 1))
 
 fromNat :: Integral a => Nat -> a
 fromNat O = 0
