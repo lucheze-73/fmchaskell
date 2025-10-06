@@ -58,28 +58,37 @@ write [u,v]     for our u `Cons` (v `Cons` Nil)
 -}
 
 head :: [a] -> a
-head = undefined
+head [] = error "Nil List"
+head (x : xs) = x
 
 tail :: [a] -> [a]
-tail = undefined
+tail [] = error "Nil List"
+tail (x : xs) = xs
 
 null :: [a] -> Bool
-null = undefined
+null [] = True
+null xs = False
 
 length :: Integral i => [a] -> i
-length = undefined
+length [] = 0
+length (x : xs) = length xs + 1
 
 sum :: Num a => [a] -> a
-sum = undefined
+sum [] = 0
+sum (x : xs) = x + sum xs
 
 product :: Num a => [a] -> a
-product = undefined
+product [] = 1
+product (x : xs) = x * product xs
 
 reverse :: [a] -> [a]
-reverse = undefined
+reverse [] = []
+reverse (x : xs) = reverse xs ++ [x]
 
 (++) :: [a] -> [a] -> [a]
-(++) = undefined
+[] ++ [] = []
+[] ++ xs = xs
+(x : xs) ++ ys = x: (xs ++ ys)
 
 -- right-associative for performance!
 -- (what?!)
@@ -87,7 +96,7 @@ infixr 5 ++
 
 -- (snoc is cons written backwards)
 snoc :: a -> [a] -> [a]
-snoc = undefined
+snoc x xs = xs ++ [x]
 
 (<:) :: [a] -> a -> [a]
 (<:) = flip snoc
@@ -102,58 +111,189 @@ xs +++ (y:ys) = (xs +++ [y]) +++ ys
 -- (hmm?!)
 infixl 5 +++
 
--- minimum :: Ord a => [a] -> a
--- maximum :: Ord a => [a] -> a
+minimum :: Ord a => [a] -> a
+minimum [] = error "Nil list"
+minimum (x : xs) =
+  case xs of
+    [] -> x
+    (y : ys) ->
+      if x <= y
+        then minimum (x : ys)
+        else minimum (y : ys)
 
--- take
--- drop
+maximum :: Ord a => [a] -> a
+maximum [] = error "Nil list"
+maximum (x : xs) =
+  case xs of
+    [] -> x
+    (y : ys) ->
+      if y <= x
+        then maximum (x : ys)
+        else maximum (y : ys)
 
--- takeWhile
--- dropWhile
+take :: Int -> [a] -> [a]
+take i [] = error "Not enough items in list"
+take 1 (x : xs) = [x]
+take i (x : xs) = x : take (i-1) xs
 
--- tails
--- init
--- inits
+drop :: Int -> [a] -> [a]
+drop i [] = []
+drop 0 xs = xs
+drop i (x : xs) = drop (i - 1) xs
+
+takeWhile :: (a -> Bool) -> [a] -> [a]
+takeWhile z [] = []
+takeWhile z (x : xs) =
+  if z x
+    then x: takeWhile z xs
+    else []
+
+dropWhile :: (a -> Bool) -> [a] -> [a]
+dropWhile z [] = []
+dropWhile z (x : xs) =
+  if z x
+    then dropWhile z xs
+    else x : xs
+
+tails :: [a] -> [[a]]
+tails [] = [[]]
+tails (x : xs) = (x : xs) : tails xs
+
+init :: [a] -> [a]
+init [] = error "Nil List"
+init [x] = []
+init (x : xs) = x: init xs
+
+inits :: [a] -> [[a]]
+inits [] = error "Nil List"
+inits [x] = [[]]
+inits xs = snoc (init xs) (inits (init xs))
 
 -- subsequences
+any :: (t -> Bool) -> [t] -> Bool
+any z [] = False
+any z [x] = z x
+any z (x : xs) = z x || any z xs
 
--- any
--- all
+all :: (t -> Bool) -> [t] -> Bool
+all z [] = error "Nil List"
+all z [x] = z x
+all z (x : xs) = z x && all z xs
 
--- and
--- or
+and :: [Bool] -> Bool
+and [] = True
+and [z] = z
+and (z : zs) = z && and zs
 
--- concat
+or :: [Bool] -> Bool
+or [] = False
+or [z] = z
+or (z : zs) = z || or zs
+
+concat :: [[a]] -> [a]
+concat [] = []
+concat [[], xs] = xs
+concat (xs : xss) = xs ++ concat xss
 
 -- elem using the funciton 'any' above
+elem :: Eq m => m -> [m] -> Bool
+elem x [] = False
+elem x xs = any (== x) xs
 
 -- elem': same as elem but elementary definition
 -- (without using other functions except (==))
+elem' :: Eq a => a -> [a] -> Bool
+elem' e [] = False
+elem' e (x : xs) = (e == x) || elem' e xs
 
--- (!!)
+(!!) :: Int -> [a] -> a
+_ !! [] = error "Not enough items in list"
+0 !! (x : xs) = x
+i !! (x : xs) = (i - 1) !! xs
 
--- filter
--- map
+filter :: (a -> Bool) -> [a] -> [a]
+filter z [] = []
+filter z (x : xs) =
+  if z x
+    then x : filter z xs
+    else filter z xs
 
--- cycle
--- repeat
--- replicate
+map :: (m -> n) -> [m] -> [n]
+map z [] = []
+map z (x : xs) = z x : map z xs
 
--- isPrefixOf
--- isInfixOf
--- isSuffixOf
+cycle :: [a] -> [a]
+cycle [] = []
+cycle xs = xs ++ cycle xs
 
--- zip
--- zipWith
+repeat :: a -> [a]
+repeat x = [x] ++ repeat x
 
--- intercalate
--- nub
+replicate :: Int -> a -> [a]
+replicate 0 _ = []
+replicate i x = [x] ++ replicate (i - 1) x
+
+isPrefixOf :: Eq a => [a] -> [a] -> Bool
+isPrefixOf [] _ = True
+isPrefixOf (x : xs) [] = False
+isPrefixOf (x : xs) (y : ys)= (x == y) && isPrefixOf xs ys
+
+isInfixOf :: Eq a => [a] -> [a] -> Bool
+isInfixOf [] _ = True
+isInfixOf (m : ns) [] = False
+isInfixOf (m : ns) (i : js) = 
+  if isSuffixOf (m : ns) (i : js)
+    then True
+    else
+      if (m == i)
+        then isPrefixOf ns js
+        else isInfixOf (m : ns) js
+
+isSuffixOf :: Eq a => [a] -> [a] -> Bool
+isSuffixOf [] [] = True
+isSuffixOf xs [] = False
+isSuffixOf (x : xs) (y : ys) =
+  if length ys > length xs
+    then isSuffixOf (x : xs) ys
+    else (x == y) && isSuffixOf xs ys
+
+zip :: [a] -> [b] -> [(a,b)]
+zip [] _ = []
+zip (x : xs) [] = []
+zip (x : xs) (y : ys) = (x, y) : zip xs ys
+
+zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
+zipWith z [] _ = []
+zipWith z _ [] = []
+zipWith z (x : xs) (y : ys) = z x y : zipWith z xs ys
+
+intercalate :: a -> [a] -> [a]
+intercalate _ [] = []
+intercalate _ [x] = [x]
+intercalate x (y : ys) = y :(x : intercalate x ys)
+
+nub :: Eq a => [a] -> [a]
+nub [] = []
+nub (x : xs) = x : nub (filter (/= x) xs)
 
 -- splitAt
 -- what is the problem with the following?:
 -- splitAt n xs  =  (take n xs, drop n xs)
+      -- it crashes if n is greater then the length of xs
+splitAt :: Int -> [a] -> ([a], [a])
+splitAt i [] =
+  case i of
+    0 -> ([],[])
+    y -> error "Nil lst"
+splitAt i xs
+  | i == length xs = (xs,[])
+  | i == 0 = ([],xs)
+  | otherwise = (take i xs, drop i xs)
 
 -- break
+break :: (a -> Bool) -> [a] -> ([a], [a])
+break z [] = ([],[])
+break z xs = (takeWhile (not . z) xs, dropWhile (not . z) xs)
 
 -- lines
 -- words
@@ -177,4 +317,3 @@ Examples of palindromes:
 "Doc, note I dissent.  A fast never prevents a fatness.  I diet on cod."
 
 -}
-
